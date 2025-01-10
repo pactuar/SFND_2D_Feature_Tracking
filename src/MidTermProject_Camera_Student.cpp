@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
                 int y = round(it->pt.y);
                 if ((x < vehicleRect.x) || (x > (vehicleRect.x + vehicleRect.width)) || (y < vehicleRect.y) || (y > (vehicleRect.y + vehicleRect.height)))
                 {
-                    keypoints.erase(it); // this gives the next iterator already!
+                    it = keypoints.erase(it); // this gives the next iterator already!
                 }
                 else
                 {
