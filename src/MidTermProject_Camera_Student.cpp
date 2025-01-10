@@ -58,8 +58,16 @@ int main(int argc, const char *argv[])
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.1 -> replace the following code with ring buffer of size dataBufferSize
+        if (dataBuffer.size() == dataBufferSize)
+        {
+            // pop off the front
+            dataBuffer.erase(dataBuffer.cbegin());
 
-        // push image into data frame buffer
+            // DEBUG print statement to see if the capacity of the vector remains the same
+            //cout << "dataBuffer capacity: " << dataBuffer.capacity() << endl;
+        }
+
+        // push image into data frame buffer on the back
         DataFrame frame;
         frame.cameraImg = imgGray;
         dataBuffer.push_back(frame);
