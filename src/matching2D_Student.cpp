@@ -101,3 +101,76 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
         cv::waitKey(0);
     }
 }
+
+// Detect keypoints in image using the traditional Shi-Thomasi detector
+void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis)
+{
+    // Harris corner Detector parameters
+    int blockSize = 4;     // for every pixel, a blockSize × blockSize neighborhood is considered
+    int apertureSize = 3;  // aperture parameter for Sobel operator (must be odd)
+    int minResponse = 100; // minimum value for a corner in the 8bit scaled response matrix
+    double k = 0.04;       // Harris parameter (see equation for details)
+
+    double t = (double)cv::getTickCount();
+
+    // Detect Harris corners and normalize output
+    cv::Mat dst, dst_norm, dst_norm_scaled;
+    dst = cv::Mat::zeros(img.size(), CV_32FC1);
+    cv::cornerHarris(img, dst, blockSize, apertureSize, k, cv::BORDER_DEFAULT);
+    cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+    cv::convertScaleAbs(dst_norm, dst_norm_scaled);
+
+    int sw_size = 9;  // sliding window size, should be odd (and bigger than the aperature)
+    int sw_dist = floor(sw_size / 2);
+
+    // create output image and find keypoints
+    int nrows = dst_norm_scaled.rows;
+    int ncols = dst_norm_scaled.cols;
+    cv::Mat result_img = cv::Mat::zeros(nrows, ncols, CV_8U);
+
+    // non-maxima suppression
+    for (int r = sw_dist; r < nrows - sw_dist - 1; r++)
+    {
+        for (int c = sw_dist; c < ncols - sw_dist - 1; c++)
+        {
+            unsigned int max_val = minResponse;
+
+            for (int rs = r - sw_dist; rs <= r + sw_dist; rs++)
+            {
+                for (int cs = c - sw_dist; cs <= c + sw_dist; cs++)
+                {
+                    unsigned int new_val = (int)dst_norm.at<float>(rs, cs);
+                    if (new_val > max_val)
+                        max_val = new_val;
+                }
+            }
+
+            // if the current pixel is the max val then save as local maximum
+            if ((int)dst_norm.at<float>(r, c) == max_val)
+            {
+                keypoints.push_back(cv::KeyPoint(c, r, blockSize, -1.0F, (int)dst_norm.at<float>(r, c)));
+                result_img.at<unsigned int>(r, c) = max_val;
+            }
+            else
+            {
+                result_img.at<unsigned int>(r, c) = 0;
+            }
+                
+        }
+    }
+
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << "Harris corner + NMS detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+
+    // visualize results
+    if (bVis)
+    {
+        // show NMS image
+        std::string windowName = "Harris Result Image";
+        cv::namedWindow(windowName, 1);
+        cv::Mat visImage = img.clone();
+        cv::drawKeypoints(img, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        cv::imshow(windowName, visImage);
+        cv::waitKey(0);
+    }
+}
