@@ -79,7 +79,7 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "HARRIS";
+        string detectorType = "SIFT";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -95,7 +95,7 @@ int main(int argc, const char *argv[])
         }
         else
         {
-            //...
+            detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
         //// EOF STUDENT ASSIGNMENT
 
@@ -103,11 +103,25 @@ int main(int argc, const char *argv[])
         //// TASK MP.3 -> only keep keypoints on the preceding vehicle
 
         // only keep keypoints on the preceding vehicle
+        // SO post on how to delete elements of a vector while iterating: https://stackoverflow.com/a/1604632
         bool bFocusOnVehicle = true;
         cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle)
         {
-            // ...
+            // iterate through the keypoints and if they are not within the rectangle, drop them
+            for (auto it = keypoints.begin(); it != keypoints.end(); )
+            {
+                int x = round(it->pt.x);
+                int y = round(it->pt.y);
+                if ((x < vehicleRect.x) || (x > (vehicleRect.x + vehicleRect.width)) || (y < vehicleRect.y) || (y > (vehicleRect.y + vehicleRect.height)))
+                {
+                    keypoints.erase(it); // this gives the next iterator already!
+                }
+                else
+                {
+                    ++it;
+                }
+            }
         }
 
         //// EOF STUDENT ASSIGNMENT

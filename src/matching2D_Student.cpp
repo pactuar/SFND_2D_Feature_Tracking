@@ -174,3 +174,35 @@ void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
         cv::waitKey(0);
     }
 }
+
+void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis)
+{
+    // Create detector based on type
+    cv::Ptr<cv::FeatureDetector> detector;
+    if (detectorType.compare("FAST") == 0)
+    {
+        detector = cv::FastFeatureDetector::create(30);
+    }
+    else if (detectorType.compare("BRISK") == 0)
+    {
+        detector = cv::BRISK::create();
+    }
+    else if (detectorType.compare("ORB") == 0)
+    {
+        detector = cv::ORB::create();
+    }
+    else if (detectorType.compare("AKAZE") == 0)
+    {
+        detector = cv::AKAZE::create();
+    }
+    else if (detectorType.compare("SIFT") == 0)
+    {
+        detector = cv::xfeatures2d::SIFT::create();
+    }
+
+    // Do the detection
+    double t = (double)cv::getTickCount();
+    detector->detect(img, keypoints);
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << detectorType << " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+}
