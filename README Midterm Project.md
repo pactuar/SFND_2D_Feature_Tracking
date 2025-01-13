@@ -1,43 +1,56 @@
-# SFND 2D Feature Tracking
+1. The data buffer was implemented by deleting the first element of the vector then pushing the next element onto the end (to always keep the size at 2).
 
-<img src="images/keypoints.png" width="820" height="248" />
+2. All 5 additional detectors were implemented. For Harris the threshold was changed to 30 as it was in the exercises. All others were implemented with default parameters.
 
-The idea of the camera course is to build a collision detection system - that's the overall goal for the Final Project. As a preparation for this, you will now build the feature tracking part and test various detector / descriptor combinations to see which ones perform best. This mid-term project consists of four parts:
+3. Keypoints were removed by looping over all keypoints and deleted anything that wasn't in the rectangles bounds.
 
-* First, you will focus on loading images, setting up data structures and putting everything into a ring buffer to optimize memory load. 
-* Then, you will integrate several keypoint detectors such as HARRIS, FAST, BRISK and SIFT and compare them with regard to number of keypoints and speed. 
-* In the next part, you will then focus on descriptor extraction and matching using brute force and also the FLANN approach we discussed in the previous lesson. 
-* In the last part, once the code framework is complete, you will test the various algorithms in different combinations and compare them with regard to some performance measures. 
+4. All 5 additional descriptors were implemented. Default settings were used.
 
-See the classroom instruction and code comments for more details on each of these parts. Once you are finished with this project, the keypoint matching part will be set up and you can proceed to the next lesson, where the focus is on integrating Lidar points and on object detection using deep-learning. 
+5. FLANN matching was implemented. KNN was also implemented.
 
-## Dependencies for Running Locally
-1. cmake >= 2.8
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
+6. The KNN matching is filtered by the descriptor distance ratio test (threshold of 0.8).
 
-2. make >= 4.1 (Linux, Mac), 3.81 (Windows)
- * Linux: make is installed by default on most Linux distros
- * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
- * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
+*NOTE: For the performance numbers below. All cases were run on a local VM and not the workstation.*
 
-3. OpenCV >= 4.1
- * All OSes: refer to the [official instructions](https://docs.opencv.org/master/df/d65/tutorial_table_of_content_introduction.html)
- * This must be compiled from source using the `-D OPENCV_ENABLE_NONFREE=ON` cmake flag for testing the SIFT and SURF detectors. If using [homebrew](https://brew.sh/): `$> brew install --build-from-source opencv` will install required dependencies and compile opencv with the `opencv_contrib` module by default (no need to set `-DOPENCV_ENABLE_NONFREE=ON` manually). 
- * The OpenCV 4.1.0 source code can be found [here](https://github.com/opencv/opencv/tree/4.1.0)
+7. Number or keypoints found by the detectors.  See spreadsheet for full details. Averages over all ten images given below:
 
-4. gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
-  * Windows: recommend using either [MinGW-w64](http://mingw-w64.org/doku.php/start) or [Microsoft's VCPKG, a C++ package manager](https://docs.microsoft.com/en-us/cpp/build/install-vcpkg?view=msvc-160&tabs=windows). VCPKG maintains its own binary distributions of OpenCV and many other packages. To see what packages are available, type `vcpkg search` at the command prompt. For example, once you've _VCPKG_ installed, you can install _OpenCV 4.1_ with the command:
-```bash
-c:\vcpkg> vcpkg install opencv4[nonfree,contrib]:x64-windows
-```
-Then, add *C:\vcpkg\installed\x64-windows\bin* and *C:\vcpkg\installed\x64-windows\debug\bin* to your user's _PATH_ variable. Also, set the _CMake Toolchain File_ to *c:\vcpkg\scripts\buildsystems\vcpkg.cmake*.
+    * SHITOMASI:   1342 (Lots of point on road and other car)
+    * HARRIS:      77.5 (low number of keypoints, had to have a high threshold to get decent keypoints)
+    * SIFT:        1356
+    * FAST:        1787
+    * ORB:         500
+    * AKAZE:       1343
 
+8. Number of of matches keypoints (Image pair 1 and 2) [I didn't do every combination for ALL ten images since that would be over 300 datapoints]
 
-## Basic Build Instructions
+    * SHITOMASI + BRISK:    85
+    * HARRIS + BRISK:       9
+    * SIFT+BRISK:           57
+    * FAST+BRISK:           149
+    * ORB+BRISK:            73
+    * AKAZE+BRISK:          137
+    * AKAZE+AKAZE:          138
+    * ORB+ORB:              67
+    * ORB+FREAK:            42
+    * ORB+BRIEF:            49
+    * FAST+BRIEF:           119
 
-1. Clone this repo.
-2. Make a build directory in the top level directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./2D_feature_tracking`.
+9. Performance [detector (ms), descriptor (ms)] (Image pair 1 and 2) [I didn't do every combination for ALL ten images since that would be over 300 datapoints], so I chose a sample set to try
+
+    * SHITOMASI + BRISK:    8.9, 1.4
+    * HARRIS + BRISK:       88.6, 0.8
+    * SIFT+BRISK:           85.6, 1.0
+    * FAST+BRISK:           0.6, 1.6
+    * ORB+BRISK:            4.4, 1.0
+    * AKAZE+BRISK:          55.5, 1.18
+    * AKAZE+AKAZE:          44.8, 34.9
+    * ORB+ORB:              4.8, 2.1
+    * ORB+FREAK:            4.9, 22.2
+    * ORB+BRIEF:            4.5, 0.3
+    * FAST+BRIEF:           0.6, 1.1
+
+    Based on speed I would choose FAST+BRIEF, but I though the keypoint matches were a bit better with ORB. So my top 3 are:
+    
+    * ORB+ORB
+    * ORB+BRIEF
+    * FAST+BRIEF
